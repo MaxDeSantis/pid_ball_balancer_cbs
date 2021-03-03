@@ -1,0 +1,5 @@
+vision_opencv/opencv_tests
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/opencv_tests/cmake.lock /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/./cmake.lock
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/opencv_tests/lib/pkgconfig/opencv_tests.pc /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/lib/pkgconfig/opencv_tests.pc
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/opencv_tests/share/opencv_tests/cmake/opencv_testsConfig-version.cmake /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/share/opencv_tests/cmake/opencv_testsConfig-version.cmake
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/opencv_tests/share/opencv_tests/cmake/opencv_testsConfig.cmake /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/share/opencv_tests/cmake/opencv_testsConfig.cmake

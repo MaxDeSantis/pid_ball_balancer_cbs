@@ -1,0 +1,2 @@
+vision_opencv/vision_opencv
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/vision_opencv/cmake.lock /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/./cmake.lock

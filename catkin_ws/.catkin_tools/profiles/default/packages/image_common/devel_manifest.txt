@@ -1,0 +1,2 @@
+image_common/image_common
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/.private/image_common/cmake.lock /home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/./cmake.lock
