@@ -1,1 +1,1 @@
-/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/./cmake.lock 10
+/home/max/projects/pid_ball_balancer_cbs/catkin_ws/devel/./cmake.lock 30
