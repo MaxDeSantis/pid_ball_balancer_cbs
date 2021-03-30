@@ -59,7 +59,6 @@ int main(int argc, char** argv)
         Bgra8: CV_8UC4, BGR color image with alpha channel
         Rgba8: CV_8UC4, CV, RGB color image with alpha channel
       */
-      //cv::imshow("camera", image);
       cv::waitKey(1); // Display image for 1 millisecond
  
       ros::spinOnce();
