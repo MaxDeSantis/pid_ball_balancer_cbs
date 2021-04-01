@@ -2,6 +2,7 @@
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <sensor_msgs/image_encodings.h>
  
 // Author: Addison Sears-Collins
 // Website: https://automaticaddison.com
@@ -10,6 +11,7 @@
  
 //using namespace cv;
 
+using namespace cv;
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
  
@@ -21,11 +23,13 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   { 
    
     // Convert the ROS message  
-    cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
-     
+    cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
     // Store the values of the OpenCV-compatible image
     // into the current_frame variable
     cv::Mat current_frame = cv_ptr->image;
+    Mat newFrame;
+    cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR);
+    imshow("Isolated", newFrame);
     //cv::Mat hsv_frame;
     //cv::cvtColor(current_frame, hsv_frame, COLOR_BGR2HSV);
     //Mat mask1, mask2;
@@ -33,7 +37,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     //inRange(hsv_frame, Scalar(170, 120, 70), Scalar(180, 255, 255), mask2);
     //mask1 = mask1 + mask2;
     // Display the current frame
-    cv::imshow("view", current_frame); 
+    //cv::imshow("view", current_frame); 
     //cv::imshow("edited view", mask1);
      
     // Display frame for 30 milliseconds
