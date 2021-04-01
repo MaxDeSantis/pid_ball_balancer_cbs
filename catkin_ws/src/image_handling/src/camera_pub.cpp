@@ -4,13 +4,16 @@
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <ros/ros.h>
+#include <ros/console.h>
 #include <sensor_msgs/image_encodings.h>
+#include <iostream>
  
 // Author: Addison Sears-Collins
 // Website: https://automaticaddison.com
 // Description: A basic image publisher for ROS in C++
 // Date: June 27, 2020
  
+using namespace cv;
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "video_pub_cpp");
@@ -29,12 +32,15 @@ int main(int argc, char** argv)
      
     // Publish to the /camera topic
     image_transport::Publisher pub_frame = it.advertise("camera", 1);
+    //image_transport::Publisher pub_frame_mask = it.advertise("hsv", 1);
      
     cv::Mat frame;//Mat is the image class defined in OpenCV
     sensor_msgs::ImagePtr msg;
  
     ros::Rate loop_rate(10);
- 
+    cv::Mat hsv;
+
+
     while (nh.ok()) {
  
       // Load image
@@ -45,20 +51,22 @@ int main(int argc, char** argv)
         ROS_ERROR_STREAM("Failed to capture image!");
         ros::shutdown();
       }
- 
+      Mat mask1, mask2;
       // Convert image from cv::Mat (OpenCV) type to sensor_msgs/Image (ROS) type and publish
-      msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+      cvtColor(frame, hsv, COLOR_BGR2HSV);
+
+      inRange(hsv, Scalar(170, 120, 70), Scalar(180, 255, 255), mask1); //attempting to isolate red
+      //erode(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      //dilate(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+      inRange(hsv, Scalar(0, 120, 70), Scalar(10, 255, 255), mask2);
+      //erode(mask2, mask2, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      //dilate(mask2, mask2, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+      mask1 = mask1 + mask2;
+      msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
+      
       pub_frame.publish(msg);
-      /*
-      Cv_bridge can selectively convert color and depth information. In order to use the specified
-      feature encoding, there is a centralized coding form:
-        Mono8: CV_8UC1, grayscale image
-        Mono16: CV_16UC1, 16-bit grayscale image
-        Bgr8: CV_8UC3 with color information and the order of colors is BGR order
-        Rgb8: CV_8UC3 with color information and the order of colors is RGB order
-        Bgra8: CV_8UC4, BGR color image with alpha channel
-        Rgba8: CV_8UC4, CV, RGB color image with alpha channel
-      */
       cv::waitKey(1); // Display image for 1 millisecond
  
       ros::spinOnce();
