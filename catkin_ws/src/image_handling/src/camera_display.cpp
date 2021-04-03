@@ -31,7 +31,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     // into the current_frame variable
     cv::Mat current_frame = cv_ptr->image;
     Mat newFrame;
-    cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR);
+    cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR)
     imshow("Mono", newFrame);
     // Display frame for 30 milliseconds
     cv::waitKey(30);
@@ -56,6 +56,10 @@ void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
     ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
   }
 } */
+bool go = true;
+void btnCallback(int state, void* userData) {
+  go = false;
+}
  
 int main(int argc, char **argv)
 {
@@ -90,10 +94,13 @@ int main(int argc, char **argv)
 
   createTrackbar("valLower", "Control", &valLower, 255);
   createTrackbar("valUpper", "Control", &valUpper, 255);
+
+  createButton("exit", btnCallback, NULL, QT_PUSH_BUTTON, 0);
+
   //image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
   // Make sure we keep reading new video frames by calling the imageCallback function
 
-  while(true) {
+  while(go) {
       params.hueLower = hueLower;
       params.hueUpper = hueUpper;
       params.satLower = satLower;
