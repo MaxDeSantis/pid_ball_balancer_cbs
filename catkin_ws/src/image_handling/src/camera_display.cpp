@@ -15,6 +15,9 @@
 //using namespace cv;
 
 using namespace cv;
+
+bool go = true;
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
  
@@ -31,7 +34,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     // into the current_frame variable
     cv::Mat current_frame = cv_ptr->image;
     Mat newFrame;
-    cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR)
+    cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR);
     imshow("Mono", newFrame);
     // Display frame for 30 milliseconds
     cv::waitKey(30);
@@ -56,7 +59,7 @@ void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
     ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
   }
 } */
-bool go = true;
+
 void btnCallback(int state, void* userData) {
   go = false;
 }
