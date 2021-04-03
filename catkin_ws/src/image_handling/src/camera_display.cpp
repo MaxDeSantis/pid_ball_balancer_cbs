@@ -18,7 +18,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   // Pointer used for the conversion from a ROS message to 
   // an OpenCV-compatible image
   cv_bridge::CvImagePtr cv_ptr;
-   
+
   try
   { 
    
@@ -29,23 +29,27 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     cv::Mat current_frame = cv_ptr->image;
     Mat newFrame;
     cv::cvtColor(current_frame, newFrame, COLOR_GRAY2BGR);
-    imshow("Isolated", newFrame);
-    //cv::Mat hsv_frame;
-    //cv::cvtColor(current_frame, hsv_frame, COLOR_BGR2HSV);
-    //Mat mask1, mask2;
-    //inRange(hsv_frame, Scalar(0, 120, 70), Scalar(10, 255, 255), mask1);
-    //inRange(hsv_frame, Scalar(170, 120, 70), Scalar(180, 255, 255), mask2);
-    //mask1 = mask1 + mask2;
-    // Display the current frame
-    //cv::imshow("view", current_frame); 
-    //cv::imshow("edited view", mask1);
-     
+    imshow("Mono", newFrame);
     // Display frame for 30 milliseconds
     cv::waitKey(30);
   }
   catch (cv_bridge::Exception& e)
   {
-    ROS_ERROR("Could not convert from '%s' to 'bgr8'.", msg->encoding.c_str());
+    ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
+  }
+}
+
+void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
+
+  cv_bridge::CvImagePtr cv_circle_ptr;
+  try {
+    cv_circle_ptr = cv_bridge::toCvCopy(msg, "bgr8");
+    Mat frame = cv_circle_ptr->image;
+    imshow("Circle", frame);
+    cv::waitKey(30);
+  }
+  catch (cv_bridge::Exception& e) {
+    ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
   }
 }
  
@@ -61,11 +65,11 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it(nh);
    
   // Subscribe to the /camera topic
-  image_transport::Subscriber sub = it.subscribe("camera", 1, imageCallback);
-   
+  image_transport::Subscriber sub = it.subscribe("cam/mono", 1, imageCallback);
+  image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
   // Make sure we keep reading new video frames by calling the imageCallback function
   ros::spin();
    
   // Close down OpenCV
-  cv::destroyWindow("view");
+  cv::destroyAllWindows();
 }
