@@ -3,6 +3,9 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <image_handling/hsv_params.h>
+#include <iostream>
  
 // Author: Addison Sears-Collins
 // Website: https://automaticaddison.com
@@ -39,6 +42,7 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
   }
 }
 
+/*
 void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
 
   cv_bridge::CvImagePtr cv_circle_ptr;
@@ -51,7 +55,7 @@ void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
   catch (cv_bridge::Exception& e) {
     ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
   }
-}
+} */
  
 int main(int argc, char **argv)
 {
@@ -66,10 +70,42 @@ int main(int argc, char **argv)
    
   // Subscribe to the /camera topic
   image_transport::Subscriber sub = it.subscribe("cam/mono", 1, imageCallback);
-  image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
+  ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("cam/params", 1);
+  image_handling::hsv_params params = image_handling::hsv_params();
+  ros::Rate loop_rate(10);
+
+  namedWindow("Control", WINDOW_AUTOSIZE);
+  int hueLower = 0;
+  int hueUpper = 179;
+  int satLower = 0;
+  int satUpper = 255;
+  int valLower = 0;
+  int valUpper = 255;
+
+  createTrackbar("hueLower", "Control", &hueLower, 179);
+  createTrackbar("hueUppper", "Control", &hueUpper, 179);
+
+  createTrackbar("satLower", "Control", &satLower, 255);
+  createTrackbar("satUpper", "Control", &satUpper, 255);
+
+  createTrackbar("valLower", "Control", &valLower, 255);
+  createTrackbar("valUpper", "Control", &valUpper, 255);
+  //image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
   // Make sure we keep reading new video frames by calling the imageCallback function
-  ros::spin();
-   
+
+  while(true) {
+      params.hueLower = hueLower;
+      params.hueUpper = hueUpper;
+      params.satLower = satLower;
+      params.satUpper = satUpper;
+      params.valLower = valLower;
+      params.valUpper = valUpper;
+
+      param_pub.publish(params);
+
+      ros::spinOnce();
+      loop_rate.sleep();
+  }
   // Close down OpenCV
   cv::destroyAllWindows();
 }
