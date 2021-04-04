@@ -112,7 +112,7 @@ int main(int argc, char** argv)
       // -----------------------------------------------------------------
 
       detector->detect(mask1, keypoints);
-      drawKeypoints(mask1, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+      drawKeypoints(frame, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       /*HoughCircles(mask1, circles, HOUGH_GRADIENT, 1, mask1.rows/16, 100, 30, 0, 60);
 
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
 
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
       //circleMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
-      msgerode = cv_bridge::CvImage(std_msgs::Header(), "mono8", keyPointMat).toImageMsg();
+      msgerode = cv_bridge::CvImage(std_msgs::Header(), "bgr8", keyPointMat).toImageMsg();
 
       pub_frame.publish(msg);
       pub_erode.publish(msgerode);

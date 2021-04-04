@@ -20,9 +20,9 @@ using namespace cv;
 void erodeCallback(const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImagePtr cv_ptr;
   try {
-    cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+    cv_ptr = cv_bridge::toCvCopy(msg, "bgr8");
     Mat frame = cv_ptr->image;
-    cvtColor(frame, frame, COLOR_GRAY2BGR);
+    //cvtColor(frame, frame, COLOR_GRAY2BGR);
     imshow("erode", frame);
     cv::waitKey(30);
   }
