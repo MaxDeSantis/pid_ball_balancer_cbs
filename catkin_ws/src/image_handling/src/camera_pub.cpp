@@ -41,9 +41,6 @@ void paramCallback(const image_handling::hsv_paramsPtr& msg) {
 }
 // ------------------------------------------------------------
 
-void testCB(const std_msgs::String::ConstPtr& msg) {
-  ROS_INFO("I heard: %s", msg->data.c_str());
-}
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "video_pub_cpp");
@@ -65,7 +62,6 @@ int main(int argc, char** argv)
     image_transport::Publisher pub_frame = it.advertise("/cam/mono", 1);
     //image_transport::Publisher pub_circle_frame = it.advertise("cam/circle", 1);
     ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
-    ros::Subscriber test_sub = nh.subscribe("/cam/test", 1, testCB);
     // --------------------------------------------------------------------------
     ros::Rate loop_rate(10);
 

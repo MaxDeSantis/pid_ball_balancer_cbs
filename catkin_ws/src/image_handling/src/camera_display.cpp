@@ -74,7 +74,6 @@ int main(int argc, char **argv)
   image_transport::Subscriber sub = it.subscribe("/cam/mono", 1, imageCallback);
   ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("/cam/params", 1);
   image_handling::hsv_params params = image_handling::hsv_params();
-  ros::Publisher test_pub = nh.advertise<std_msgs::String>("/cam/test", 1);
   ros::Rate loop_rate(10);
 
   namedWindow("Control", WINDOW_AUTOSIZE);
@@ -106,10 +105,8 @@ int main(int argc, char **argv)
       params.valLower = valLower;
       params.valUpper = valUpper;
 
-      std_msgs::String msg;
-      msg.data = "hi!";
       param_pub.publish(params);
-      test_pub.publish(msg);
+
       ros::spinOnce();
       loop_rate.sleep();
   }
