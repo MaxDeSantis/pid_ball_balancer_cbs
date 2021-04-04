@@ -12,6 +12,7 @@
 #include <vector>
 #include <image_handling/hsv_params.h>
 #include <std_msgs/String.h>
+#include <opencv2/opencv.hpp>
  
 // Author: Addison Sears-Collins
 // Website: https://automaticaddison.com
@@ -72,9 +73,14 @@ int main(int argc, char** argv)
 
     Mat frame;
     Mat hsv;
-    Mat mask1, mask1erode;
+    Mat mask1;
+    Mat keyPointMat;
     
-    
+    SimpleBlobDetector::Params params;
+    params.filterByArea = true;
+    params.minArea = 50;
+    Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
+    vector<KeyPoint> keypoints;
     
     //vector<Vec3f> circles;
     //cv::Mat circleImg;
@@ -98,20 +104,15 @@ int main(int argc, char** argv)
       cvtColor(frame, hsv, COLOR_BGR2HSV);
       // -----------------------------------------------------------------
 
-      // --- Threshold image using global parameters
+      // --- Threshold image using global parameters and erode noise
       // -----------------------------------------------------------------
       inRange(hsv, Scalar(hueLower, satLower, valLower), Scalar(hueUpper, satUpper, valUpper), mask1); //attempting to isolate red
-      
-      erode(mask1, mask1erode, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-      dilate(mask1erode, mask1erode, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      erode(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      dilate(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
       // -----------------------------------------------------------------
 
-      /*
-      inRange(hsv, Scalar(0, 120, 70), Scalar(10, 255, 255), mask2);
-      erode(mask2, mask2, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-      dilate(mask2, mask2, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-      */
-      //mask1 = mask1 + mask2;
+      detector->detect(mask1, keypoints);
+      drawKeypoints(mask1, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
       /*HoughCircles(mask1, circles, HOUGH_GRADIENT, 1, mask1.rows/16, 100, 30, 0, 60);
 
@@ -124,7 +125,7 @@ int main(int argc, char** argv)
 
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
       //circleMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
-      msgerode = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1erode).toImageMsg();
+      msgerode = cv_bridge::CvImage(std_msgs::Header(), "mono8", keyPointMat).toImageMsg();
 
       pub_frame.publish(msg);
       pub_erode.publish(msgerode);
