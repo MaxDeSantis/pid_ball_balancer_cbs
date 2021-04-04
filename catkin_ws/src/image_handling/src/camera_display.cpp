@@ -16,8 +16,6 @@
 
 using namespace cv;
 
-bool go = true;
-
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
  
@@ -59,10 +57,6 @@ void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
     ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
   }
 } */
-
-void btnCallback(int state, void* userData) {
-  go = false;
-}
  
 int main(int argc, char **argv)
 {
@@ -88,6 +82,7 @@ int main(int argc, char **argv)
   int satUpper = 255;
   int valLower = 0;
   int valUpper = 255;
+  int exit = 0;
 
   createTrackbar("hueLower", "Control", &hueLower, 179);
   createTrackbar("hueUppper", "Control", &hueUpper, 179);
@@ -98,11 +93,12 @@ int main(int argc, char **argv)
   createTrackbar("valLower", "Control", &valLower, 255);
   createTrackbar("valUpper", "Control", &valUpper, 255);
 
-  createButton("exit", btnCallback, NULL, QT_PUSH_BUTTON, 0);
+  createTrackbar("exit?", "Control", &exit, 1);
 
   //image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
   // Make sure we keep reading new video frames by calling the imageCallback function
 
+  bool go = true;
   while(go) {
       params.hueLower = hueLower;
       params.hueUpper = hueUpper;
@@ -115,6 +111,9 @@ int main(int argc, char **argv)
 
       ros::spinOnce();
       loop_rate.sleep();
+      if(exit == 1) {
+        go = false;
+      }
   }
   // Close down OpenCV
   cv::destroyAllWindows();
