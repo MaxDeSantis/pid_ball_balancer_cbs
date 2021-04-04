@@ -21,11 +21,11 @@
 using namespace cv;
 using namespace std;
 
-int hueLower = 0;
+int hueLower = 165;
 int hueUpper = 179;
-int satLower = 0;
+int satLower = 80;
 int satUpper = 255;
-int valLower = 0;
+int valLower = 80;
 int valUpper = 255;
 
 // --- Updates variables used for thresholding
@@ -60,17 +60,19 @@ int main(int argc, char** argv)
     // --- Define publishers and subscribers
     // --------------------------------------------------------------------------
     image_transport::Publisher pub_frame = it.advertise("/cam/mono", 1);
+    image_transport::Publisher pub_erode = it.advertise("/cam/erode", 1);
     //image_transport::Publisher pub_circle_frame = it.advertise("cam/circle", 1);
     ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
     // --------------------------------------------------------------------------
     ros::Rate loop_rate(10);
 
     sensor_msgs::ImagePtr msg;
+    sensor_msgs::ImagePtr msgerode;
     //sensor_msgs::ImagePtr circleMsg;
 
     Mat frame;
     Mat hsv;
-    Mat mask1;
+    Mat mask1, mask1erode;
     
     
     
@@ -99,8 +101,9 @@ int main(int argc, char** argv)
       // --- Threshold image using global parameters
       // -----------------------------------------------------------------
       inRange(hsv, Scalar(hueLower, satLower, valLower), Scalar(hueUpper, satUpper, valUpper), mask1); //attempting to isolate red
-      //erode(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-      //dilate(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      
+      erode(mask1, mask1erode, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+      dilate(mask1erode, mask1erode, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
       // -----------------------------------------------------------------
 
       /*
@@ -121,8 +124,10 @@ int main(int argc, char** argv)
 
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
       //circleMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
+      msgerode = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1erode).toImageMsg();
 
       pub_frame.publish(msg);
+      pub_erode.publish(msgerode);
       //pub_circle_frame.publish(circleMsg);
       cv::waitKey(1); // Display image for 1 millisecond
  

@@ -17,6 +17,20 @@
 
 using namespace cv;
 
+void erodeCallback(const sensor_msgs::ImageConstPtr& msg) {
+  cv_bridge::CvImagePtr cv_ptr;
+  try {
+    cv_ptr = cv_bridge::toCvCopy(msg, "mono8");
+    Mat frame = cv_ptr->image;
+    cvtColor(frame, frame, COLOR_GRAY2BGR);
+    imshow("erode", frame);
+    cv::waitKey(30);
+  }
+  catch (cv_bridge::Exception& e)
+  {
+    ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
+  }
+}
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
  
@@ -72,18 +86,19 @@ int main(int argc, char **argv)
    
   // Subscribe to the /camera topic
   image_transport::Subscriber sub = it.subscribe("/cam/mono", 1, imageCallback);
+  image_transport::Subscriber sub_erode = it.subscribe("/cam/erode", 1, erodeCallback);
   ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("/cam/params", 1);
+
   image_handling::hsv_params params = image_handling::hsv_params();
   ros::Rate loop_rate(10);
 
   namedWindow("Control", WINDOW_AUTOSIZE);
-  int hueLower = 0;
+  int hueLower = 165;
   int hueUpper = 179;
-  int satLower = 0;
+  int satLower = 80;
   int satUpper = 255;
-  int valLower = 0;
+  int valLower = 80;
   int valUpper = 255;
-  int exit = 0;
 
   createTrackbar("hueLower", "Control", &hueLower, 179);
   createTrackbar("hueUppper", "Control", &hueUpper, 179);
