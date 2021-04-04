@@ -6,6 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <image_handling/hsv_params.h>
 #include <iostream>
+#include <std_msgs/String.h>
  
 // Author: Addison Sears-Collins
 // Website: https://automaticaddison.com
@@ -70,9 +71,10 @@ int main(int argc, char **argv)
   image_transport::ImageTransport it(nh);
    
   // Subscribe to the /camera topic
-  image_transport::Subscriber sub = it.subscribe("cam/mono", 1, imageCallback);
-  ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("cam/params", 1);
+  image_transport::Subscriber sub = it.subscribe("/cam/mono", 1, imageCallback);
+  ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("/cam/params", 1);
   image_handling::hsv_params params = image_handling::hsv_params();
+  ros::Publisher test_pub = nh.advertise<std_msgs::String>("/cam/test", 1);
   ros::Rate loop_rate(10);
 
   namedWindow("Control", WINDOW_AUTOSIZE);
@@ -93,13 +95,10 @@ int main(int argc, char **argv)
   createTrackbar("valLower", "Control", &valLower, 255);
   createTrackbar("valUpper", "Control", &valUpper, 255);
 
-  createTrackbar("exit?", "Control", &exit, 1);
-
   //image_transport::Subscriber subCircle = it.subscribe("cam/circle", 1, imageCircleCallback);
   // Make sure we keep reading new video frames by calling the imageCallback function
 
-  bool go = true;
-  while(go) {
+  while(ros::ok()) {
       params.hueLower = hueLower;
       params.hueUpper = hueUpper;
       params.satLower = satLower;
@@ -107,13 +106,12 @@ int main(int argc, char **argv)
       params.valLower = valLower;
       params.valUpper = valUpper;
 
+      std_msgs::String msg;
+      msg.data = "hi!";
       param_pub.publish(params);
-
+      test_pub.publish(msg);
       ros::spinOnce();
       loop_rate.sleep();
-      if(exit == 1) {
-        go = false;
-      }
   }
   // Close down OpenCV
   cv::destroyAllWindows();
