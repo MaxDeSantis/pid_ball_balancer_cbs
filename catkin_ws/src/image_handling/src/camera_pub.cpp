@@ -12,6 +12,7 @@
 #include <vector>
 #include <image_handling/hsv_params.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Float64.h>
 #include <opencv2/opencv.hpp>
  
 // Author: Addison Sears-Collins
@@ -62,6 +63,7 @@ int main(int argc, char** argv)
     // --------------------------------------------------------------------------
     image_transport::Publisher pub_frame = it.advertise("/cam/mono", 1);
     image_transport::Publisher pub_erode = it.advertise("/cam/erode", 1);
+    ros::Publisher pub_error = nh.advertise<std_msgs::Float64>("/llc/error", 1);
     //image_transport::Publisher pub_circle_frame = it.advertise("cam/circle", 1);
     ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
     // --------------------------------------------------------------------------
@@ -69,7 +71,7 @@ int main(int argc, char** argv)
 
     sensor_msgs::ImagePtr msg;
     sensor_msgs::ImagePtr msgerode;
-    //sensor_msgs::ImagePtr circleMsg;
+    std_msgs::Float64 error;
 
     Mat frame;
     Mat hsv;
@@ -77,15 +79,23 @@ int main(int argc, char** argv)
     Mat keyPointMat;
     
     SimpleBlobDetector::Params params;
+    params.minThreshold = 10;
+    params.maxThreshold = 200;
     params.filterByArea = true;
-    params.minArea = 50;
+    params.minArea = 1200;
+    params.maxArea = 4000;
+
+    params.filterByColor = true;
+    params.blobColor = 255;
+
+    params.filterByCircularity=true;
+    params.minCircularity = 0.5;
+    params.filterByConvexity=false;
+    params.filterByInertia=false;
+    
     Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
     vector<KeyPoint> keypoints;
-    
-    //vector<Vec3f> circles;
-    //cv::Mat circleImg;
-    //cv::Mat grayFrame;
-
+    float midpoint;
     while (nh.ok()) {
     
       // --- Load image, check if it has content
@@ -113,23 +123,18 @@ int main(int argc, char** argv)
 
       detector->detect(mask1, keypoints);
       drawKeypoints(frame, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-
-      /*HoughCircles(mask1, circles, HOUGH_GRADIENT, 1, mask1.rows/16, 100, 30, 0, 60);
-
-      for(Vec3i c : circles) {
-        Point center = Point(c[0], c[1]);
-        circle(frame, center, 1, Scalar(0, 100, 100), 3, LINE_AA);
-        int radius = c[2];
-        circle(frame, center, radius, Scalar(255, 0, 255), LINE_AA);
-      } */
-
+      if(keypoints.size() > 0) {
+        midpoint = mask1.cols / 2;
+        error.data = keypoints.at(0).pt.x - midpoint;
+        pub_error.publish(error);
+      }
+      
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
-      //circleMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
       msgerode = cv_bridge::CvImage(std_msgs::Header(), "bgr8", keyPointMat).toImageMsg();
 
       pub_frame.publish(msg);
       pub_erode.publish(msgerode);
-      //pub_circle_frame.publish(circleMsg);
+      
       cv::waitKey(1); // Display image for 1 millisecond
  
       ros::spinOnce();
