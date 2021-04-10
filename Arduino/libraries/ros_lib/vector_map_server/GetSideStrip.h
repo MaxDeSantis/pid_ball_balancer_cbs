@@ -1,0 +1,88 @@
+#ifndef _ROS_SERVICE_GetSideStrip_h
+#define _ROS_SERVICE_GetSideStrip_h
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+#include "ros/msg.h"
+#include "vector_map_msgs/SideStripArray.h"
+#include "geometry_msgs/PoseStamped.h"
+#include "autoware_msgs/Lane.h"
+
+namespace vector_map_server
+{
+
+static const char GETSIDESTRIP[] = "vector_map_server/GetSideStrip";
+
+  class GetSideStripRequest : public ros::Msg
+  {
+    public:
+      typedef geometry_msgs::PoseStamped _pose_type;
+      _pose_type pose;
+      typedef autoware_msgs::Lane _waypoints_type;
+      _waypoints_type waypoints;
+
+    GetSideStripRequest():
+      pose(),
+      waypoints()
+    {
+    }
+
+    virtual int serialize(unsigned char *outbuffer) const
+    {
+      int offset = 0;
+      offset += this->pose.serialize(outbuffer + offset);
+      offset += this->waypoints.serialize(outbuffer + offset);
+      return offset;
+    }
+
+    virtual int deserialize(unsigned char *inbuffer)
+    {
+      int offset = 0;
+      offset += this->pose.deserialize(inbuffer + offset);
+      offset += this->waypoints.deserialize(inbuffer + offset);
+     return offset;
+    }
+
+    const char * getType(){ return GETSIDESTRIP; };
+    const char * getMD5(){ return "d1f64bdec952e41012fc8c13f57fef77"; };
+
+  };
+
+  class GetSideStripResponse : public ros::Msg
+  {
+    public:
+      typedef vector_map_msgs::SideStripArray _objects_type;
+      _objects_type objects;
+
+    GetSideStripResponse():
+      objects()
+    {
+    }
+
+    virtual int serialize(unsigned char *outbuffer) const
+    {
+      int offset = 0;
+      offset += this->objects.serialize(outbuffer + offset);
+      return offset;
+    }
+
+    virtual int deserialize(unsigned char *inbuffer)
+    {
+      int offset = 0;
+      offset += this->objects.deserialize(inbuffer + offset);
+     return offset;
+    }
+
+    const char * getType(){ return GETSIDESTRIP; };
+    const char * getMD5(){ return "bd9a2abeb71ea61e315c29d2d466b6cb"; };
+
+  };
+
+  class GetSideStrip {
+    public:
+    typedef GetSideStripRequest Request;
+    typedef GetSideStripResponse Response;
+  };
+
+}
+#endif
