@@ -215,3 +215,6 @@ target_link_libraries(camera_pub_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(camera_display_node src/camera_display.cpp)
 target_link_libraries(camera_display_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(pos_pub_node src/pos_pub.cpp)
+target_link_libraries(pos_pub_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})

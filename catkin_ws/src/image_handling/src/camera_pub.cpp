@@ -1,5 +1,11 @@
+/* Publishes processed frames as read by the camera.
 
-//copy pasted from a tutorial as of now
+
+
+
+
+
+*/
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -15,21 +21,19 @@
 #include <std_msgs/Float64.h>
 #include <opencv2/opencv.hpp>
  
-// Author: Addison Sears-Collins
-// Website: https://automaticaddison.com
-// Description: A basic image publisher for ROS in C++
-// Date: June 27, 2020
  
 using namespace cv;
 using namespace std;
 
+// Values used to color mask the image.
 int hueLower = 165;
 int hueUpper = 179;
-int satLower = 80;
+int satLower = 120;
 int satUpper = 255;
 int valLower = 80;
 int valUpper = 255;
 
+/*
 // --- Updates variables used for thresholding
 // ------------------------------------------------------------
 void paramCallback(const image_handling::hsv_paramsPtr& msg) {
@@ -42,13 +46,14 @@ void paramCallback(const image_handling::hsv_paramsPtr& msg) {
     valUpper = msg->valUpper;
 }
 // ------------------------------------------------------------
+*/
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "video_pub_cpp");
+    ros::init(argc, argv, "frame_pub_node");
     ros::NodeHandle nh;  // Default handler for nodes in ROS
  
-    // 0 reads from your default camera
+    //Attempt to access default camera
     const int CAMERA_INDEX = 0;
     cv::VideoCapture capture(CAMERA_INDEX); 
     if (!capture.isOpened()) {
@@ -56,28 +61,26 @@ int main(int argc, char** argv)
       ros::shutdown();
     }
      
-    // Image_transport is responsible for publishing and subscribing to Images
     image_transport::ImageTransport it(nh);
     
     // --- Define publishers and subscribers
     // --------------------------------------------------------------------------
-    image_transport::Publisher pub_frame = it.advertise("/cam/mono", 1);
-    image_transport::Publisher pub_erode = it.advertise("/cam/erode", 1);
-    ros::Publisher pub_error = nh.advertise<std_msgs::Float64>("/llc/error", 1);
-    //image_transport::Publisher pub_circle_frame = it.advertise("cam/circle", 1);
-    ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
+    image_transport::Publisher pub_frame = it.advertise("/cam/monoframe", 1);
+    //image_transport::Publisher pub_erode = it.advertise("/cam/erode", 1);
+    //ros::Publisher pub_error = nh.advertise<std_msgs::Float64>("/llc/error", 1);
+    //ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
     // --------------------------------------------------------------------------
-    ros::Rate loop_rate(10);
+    ros::Rate loop_rate(30); //Run at 30 FPS
 
     sensor_msgs::ImagePtr msg;
-    sensor_msgs::ImagePtr msgerode;
-    std_msgs::Float64 error;
+    //sensor_msgs::ImagePtr msgerode;
+    //std_msgs::Float64 error;
 
     Mat frame;
     Mat hsv;
     Mat mask1;
     Mat keyPointMat;
-    
+    /*
     SimpleBlobDetector::Params params;
     params.minThreshold = 10;
     params.maxThreshold = 200;
@@ -89,13 +92,13 @@ int main(int argc, char** argv)
     params.blobColor = 255;
 
     params.filterByCircularity=true;
-    params.minCircularity = 0.5;
+    params.minCircularity = 0.2;
     params.filterByConvexity=false;
     params.filterByInertia=false;
     
     Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
     vector<KeyPoint> keypoints;
-    float midpoint;
+    float midpoint; */
     while (nh.ok()) {
     
       // --- Load image, check if it has content
@@ -121,19 +124,20 @@ int main(int argc, char** argv)
       dilate(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
       // -----------------------------------------------------------------
 
+      /*
       detector->detect(mask1, keypoints);
       drawKeypoints(frame, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
       if(keypoints.size() > 0) {
         midpoint = mask1.cols / 2;
         error.data = keypoints.at(0).pt.x - midpoint;
         pub_error.publish(error);
-      }
+      }*/
       
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
-      msgerode = cv_bridge::CvImage(std_msgs::Header(), "bgr8", keyPointMat).toImageMsg();
+      //msgerode = cv_bridge::CvImage(std_msgs::Header(), "bgr8", keyPointMat).toImageMsg();
 
       pub_frame.publish(msg);
-      pub_erode.publish(msgerode);
+      //pub_erode.publish(msgerode);
       
       cv::waitKey(1); // Display image for 1 millisecond
  
