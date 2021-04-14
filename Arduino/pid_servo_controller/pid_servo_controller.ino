@@ -1,68 +1,94 @@
 #include "ros.h"
-#include "std_msgs/Float64.h"
-#include <Servo.h>
+#include "std_msgs/Float32.h"
+#include "VarSpeedServo.h"
 
 int control = 0;
-volatile float error = 0;
-int umax = 90;
-int umin = 55;
+volatile float pos = 0;
+int midpoint;
+float previousError = 0;
+float integral = 0;
+int minError = -160;
+int maxError = 150;
+int umax = 96;
+int umin = 67;
+int umid = (umax + umin) / 2;
 
-void errorCallback(const std_msgs::Float64& errorMsg) {
-  error = errorMsg.data;
+void posCallBack(const std_msgs::Float32& pos_msg) {
+  pos = pos_msg.data;
+}
+void midpointCallBack(const std_msgs::Float32& midpoint_msg) {
+  midpoint = midpoint_msg.data;
 }
 
+
 ros::NodeHandle nh;
-ros::Subscriber<std_msgs::Float64> sub_error("/llc/error", &errorCallback);
+ros::Subscriber<std_msgs::Float32> pos_sub("/llc/pos", &posCallBack);
+ros::Subscriber<std_msgs::Float32> midpoint_sub("/llc/midpoint", &midpointCallBack);
 
+std_msgs::Float32 error_msg;
+std_msgs::Float32 control_msg;
+std_msgs::Float32 midpoint_msg;
+std_msgs::Float32 unbound_control_msg;
+ros::Publisher error_pub("/feedback/error", &error_msg);
+ros::Publisher control_pub("/feedback/control", &control_msg);
+ros::Publisher midpoint_pub("/feedback/midpoint", &midpoint_msg);
+ros::Publisher unbound_control_pub("/feedback/integral", &unbound_control_msg);
 
-Servo armServo;
+VarSpeedServo armServo;
 int servoPin = 3;
-int pos = 55;
-float kp = 1;
-float kd = 0;
-float ki = 0;
+float kp = 1.3;
+float kd = 3000;
+float ki = 0.2;
 
 void setup() {
-  armServo.attach(servoPin);
-  armServo.write(90);
 
   nh.initNode();
-  nh.subscribe(sub_error);
-  
+  nh.subscribe(pos_sub);
+  nh.subscribe(midpoint_sub);
+  nh.advertise(error_pub);
+  nh.advertise(control_pub);
+  nh.advertise(midpoint_pub);
+  nh.advertise(unbound_control_pub);
+
+  armServo.attach(servoPin);
+  armServo.write(umid, 255);
+  delay(1000);
 }
 
 void loop() {
+  midpoint_msg.data = midpoint;
+  midpoint_pub.publish(&midpoint_msg);
   nh.spinOnce();
   int u = calculateControl();
-  armServo.write(u);
-  delay(1000);
-  
-  /*
-  for(pos = 55; pos <= 100; pos++) {
-    armServo.write(pos);
-    delay(20);
-  }
-  delay(1000);
-  for(pos = 100; pos >= 55; pos--) {
-    armServo.write(pos);
-    delay(20);
-  }
-  delay(1000);
-  */
-
+ 
+  armServo.write(u, 255);
+  delay(15);
 }
 
 int calculateControl() {
+  float error = pos - midpoint;
+  float derivative = (error - previousError) / 15;
+  float dintegral = (error - previousError) * 15;
+  integral += dintegral;
+  error_msg.data = error;
   
-  control = error * kp;
+  control =  (error * kp) + (integral * ki) + (derivative * kd);
+  unbound_control_msg.data = integral;
 
-  //control = max(umin, min(umax, control));
-  if(control > 100) {
-    control = 100;
+  if(control > umax || control < umin) {
+    control -= ki * integral;
+    integral -= dintegral;
   }
-  else if(control < 55) {
-    control = 55;
-  }
+  control = map(control, minError, maxError, umin, umax);
+  control = max(umin, min(umax, control));
+  
+  control_msg.data = control;
+  
+  error_pub.publish(&error_msg);
+  unbound_control_pub.publish(&unbound_control_msg);
+  control_pub.publish(&control_msg);
+
+  previousError = error;
   
   return control;
 }

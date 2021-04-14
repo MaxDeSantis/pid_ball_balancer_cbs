@@ -7,16 +7,10 @@
 #include <image_handling/hsv_params.h>
 #include <iostream>
 #include <std_msgs/String.h>
- 
-// Author: Addison Sears-Collins
-// Website: https://automaticaddison.com
-// Description: A basic image subscriber for ROS in C++
-// Date: June 27, 2020
- 
-//using namespace cv;
 
 using namespace cv;
 
+/*
 void erodeCallback(const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImagePtr cv_ptr;
   try {
@@ -30,7 +24,8 @@ void erodeCallback(const sensor_msgs::ImageConstPtr& msg) {
   {
     ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
   }
-}
+}*/
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
  
@@ -86,8 +81,8 @@ int main(int argc, char **argv)
    
   // Subscribe to the /camera topic
   image_transport::Subscriber sub = it.subscribe("/cam/mono", 1, imageCallback);
-  image_transport::Subscriber sub_erode = it.subscribe("/cam/erode", 1, erodeCallback);
-  ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("/cam/params", 1);
+  //image_transport::Subscriber sub_erode = it.subscribe("/cam/erode", 1, erodeCallback);
+  //ros::Publisher param_pub = nh.advertise<image_handling::hsv_params>("/cam/params", 1);
 
   image_handling::hsv_params params = image_handling::hsv_params();
   ros::Rate loop_rate(10);
@@ -113,14 +108,14 @@ int main(int argc, char **argv)
   // Make sure we keep reading new video frames by calling the imageCallback function
 
   while(ros::ok()) {
-      params.hueLower = hueLower;
-      params.hueUpper = hueUpper;
-      params.satLower = satLower;
-      params.satUpper = satUpper;
-      params.valLower = valLower;
-      params.valUpper = valUpper;
+      //params.hueLower = hueLower;
+      //params.hueUpper = hueUpper;
+      //params.satLower = satLower;
+      //params.satUpper = satUpper;
+      //params.valLower = valLower;
+      //params.valUpper = valUpper;
 
-      param_pub.publish(params);
+      //param_pub.publish(params);
 
       ros::spinOnce();
       loop_rate.sleep();
