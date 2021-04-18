@@ -1,11 +1,3 @@
-/* Publishes processed frames as read by the camera.
-
-
-
-
-
-
-*/
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
@@ -32,21 +24,6 @@ int satLower = 120;
 int satUpper = 255;
 int valLower = 80;
 int valUpper = 255;
-
-/*
-// --- Updates variables used for thresholding
-// ------------------------------------------------------------
-void paramCallback(const image_handling::hsv_paramsPtr& msg) {
-
-    hueLower = msg->hueLower;
-    hueUpper = msg->hueUpper;
-    satLower = msg->satLower;
-    satUpper = msg->satUpper;
-    valLower = msg->valLower;
-    valUpper = msg->valUpper;
-}
-// ------------------------------------------------------------
-*/
 
 int main(int argc, char** argv)
 {
