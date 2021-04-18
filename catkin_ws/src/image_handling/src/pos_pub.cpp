@@ -20,16 +20,18 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Float32.h>
 #include <opencv2/opencv.hpp>
+#include <numeric>
 
 using namespace std;
 using namespace cv;
 
 void frameCallBack(const sensor_msgs::ImageConstPtr& frame_msg);
-
+void feedback();
 
 std_msgs::Float32 pos_msg;
 std_msgs::Float32 midpoint_msg;
 Mat newFrame;
+sensor_msgs::ImagePtr detectedFrameMsg;
 bool midSent = false;
 
 int main(int argc, char** argv) {
@@ -40,47 +42,54 @@ int main(int argc, char** argv) {
     image_transport::ImageTransport it(nh);
 
     image_transport::Subscriber frame_sub = it.subscribe("/cam/monoframe", 1, frameCallBack);
+    image_transport::Publisher  detected_pub = it.advertise("/cam/detectedframe", 1);
     ros::Publisher              pos_pub = nh.advertise<std_msgs::Float32>("/llc/pos", 1);
     ros::Publisher              midpoint_pub = nh.advertise<std_msgs::Float32>("/llc/midpoint", 1);
-    ros::Rate loop_rate(30);
-    
-    SimpleBlobDetector::Params params;
-    params.minThreshold = 10;
-    params.maxThreshold = 200;
-    params.filterByArea = true;
-    params.minArea = 1200;
-    params.maxArea = 4000;
+    ros::Rate loop_rate(60);
 
-    params.filterByColor = true;
-    params.blobColor = 255;
-
-    params.filterByCircularity=true;
-    params.minCircularity = 0.2;
-    params.filterByConvexity=false;
-    params.filterByInertia=false;
-
-    Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
-    vector<KeyPoint> keypoints;
-
+    RNG rng(12345);
+    Mat canny_output;
     while(ros::ok()) {
+        
+        midpoint_msg.data = newFrame.cols / 2;
+        
+        Canny(newFrame, canny_output, 100, 200);
 
-        if(!midSent) {
-            midpoint_msg.data = newFrame.cols / 2;
-            midpoint_pub.publish(midpoint_msg);
-            midSent = true;
-        }
+        vector<vector<Point>> contours;
+        vector<Vec4i> hierarchy;
+        findContours(canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
 
-        detector->detect(newFrame, keypoints);
-        if(keypoints.size() > 0) {
-            pos_msg.data = keypoints.at(0).pt.x;
+        Mat drawing = Mat::zeros(canny_output.size(), CV_8UC3);
+        vector<int> indices(contours.size());
+        iota(indices.begin(), indices.end(), 0);
+
+        if(contours.size() > 0) {
+            sort(indices.begin(), indices.end(), [&contours](int lhs, int rhs) {
+                return contours[lhs].size() > contours[rhs].size();
+            });
+            drawContours(drawing, contours, indices[0], Scalar(0, 0, 255), 2, LINE_8, hierarchy, 0);
+            Point2f center;
+            float radius = 0;
+            minEnclosingCircle(contours.at(indices[0]), center, radius);
+            pos_msg.data = center.x;
+            detectedFrameMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", drawing).toImageMsg();
+            detected_pub.publish(detectedFrameMsg);
             pos_pub.publish(pos_msg);
         }
+        
+        midpoint_pub.publish(midpoint_msg);
+        
+        
 
         ros::spinOnce();
         loop_rate.sleep();
     }
 
     return 0;
+}
+
+void feedback() {
+    
 }
 
 // --- Read published gray frame

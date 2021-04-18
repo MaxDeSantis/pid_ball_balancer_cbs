@@ -57,26 +57,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     ROS_ERROR("Could not convert from '%s' to 'mono8'.", msg->encoding.c_str());
   }
 }
-
-/*
-void imageCircleCallback(const sensor_msgs::ImageConstPtr& msg) {
-
-  cv_bridge::CvImagePtr cv_circle_ptr;
-  try {
-    cv_circle_ptr = cv_bridge::toCvCopy(msg, "bgr8");
-    Mat frame = cv_circle_ptr->image;
-    imshow("Circle", frame);
-    cv::waitKey(30);
-  }
-  catch (cv_bridge::Exception& e) {
-    ROS_ERROR("problem with circle '%s' to 'bgr8'", msg->encoding.c_str());
-  }
-} */
  
 int main(int argc, char **argv)
 {
   // The name of the node
-  ros::init(argc, argv, "frame_listener");
+  ros::init(argc, argv, "frame_display_node");
    
   // Default handler for nodes in ROS
   ros::NodeHandle nh;

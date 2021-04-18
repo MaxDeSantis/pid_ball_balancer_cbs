@@ -66,53 +66,33 @@ int main(int argc, char** argv)
     // --- Define publishers and subscribers
     // --------------------------------------------------------------------------
     image_transport::Publisher pub_frame = it.advertise("/cam/monoframe", 1);
-    //image_transport::Publisher pub_erode = it.advertise("/cam/erode", 1);
-    //ros::Publisher pub_error = nh.advertise<std_msgs::Float64>("/llc/error", 1);
-    //ros::Subscriber param_sub = nh.subscribe("/cam/params", 1, paramCallback);
-    // --------------------------------------------------------------------------
-    ros::Rate loop_rate(30); //Run at 30 FPS
+    image_transport::Publisher pub_original_frame = it.advertise("/cam/frame", 1);
+    ros::Rate loop_rate(60); //Run at 30 FPS
 
     sensor_msgs::ImagePtr msg;
-    //sensor_msgs::ImagePtr msgerode;
-    //std_msgs::Float64 error;
+    sensor_msgs::ImagePtr originalMsg;
 
     Mat frame;
     Mat hsv;
     Mat mask1;
     Mat keyPointMat;
-    /*
-    SimpleBlobDetector::Params params;
-    params.minThreshold = 10;
-    params.maxThreshold = 200;
-    params.filterByArea = true;
-    params.minArea = 1200;
-    params.maxArea = 4000;
-
-    params.filterByColor = true;
-    params.blobColor = 255;
-
-    params.filterByCircularity=true;
-    params.minCircularity = 0.2;
-    params.filterByConvexity=false;
-    params.filterByInertia=false;
+    int scaleFactor = 2;
     
-    Ptr<SimpleBlobDetector> detector = SimpleBlobDetector::create(params);
-    vector<KeyPoint> keypoints;
-    float midpoint; */
     while (nh.ok()) {
     
       // --- Load image, check if it has content
       // -----------------------------------------------------------------
       capture >> frame;
-
       if (frame.empty()) {
         ROS_ERROR_STREAM("Failed to capture image!");
         ros::shutdown();
       }
+      originalMsg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
       // -----------------------------------------------------------------
 
       // --- Blur image and convert to HSV
       // -----------------------------------------------------------------
+      resize(frame, frame, Size(frame.size().width / scaleFactor, frame.size().height / scaleFactor));
       GaussianBlur(frame, frame, Size(3, 3), 0);
       cvtColor(frame, hsv, COLOR_BGR2HSV);
       // -----------------------------------------------------------------
@@ -124,23 +104,11 @@ int main(int argc, char** argv)
       dilate(mask1, mask1, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
       // -----------------------------------------------------------------
 
-      /*
-      detector->detect(mask1, keypoints);
-      drawKeypoints(frame, keypoints, keyPointMat, Scalar(0, 0, 255), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-      if(keypoints.size() > 0) {
-        midpoint = mask1.cols / 2;
-        error.data = keypoints.at(0).pt.x - midpoint;
-        pub_error.publish(error);
-      }*/
       
       msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", mask1).toImageMsg();
-      //msgerode = cv_bridge::CvImage(std_msgs::Header(), "bgr8", keyPointMat).toImageMsg();
 
       pub_frame.publish(msg);
-      //pub_erode.publish(msgerode);
-      
-      cv::waitKey(1); // Display image for 1 millisecond
- 
+      pub_original_frame.publish(originalMsg);
       ros::spinOnce();
       loop_rate.sleep();
     }
